@@ -1,0 +1,67 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+
+header() ->"
+-module(unidata_db).
+
+-export([fetch/2]).
+
+".
+
+tail() -> "fetch(_,_) -> skip.
+".
+
+
+build(InFileName, OutFileName) ->
+    %OutFileName = OutFilePath ++ "/unidata_db.erl",
+    InFile = ux_unidata_parser:open_file(InFileName),
+    {ok, OutFile} = file:open(OutFileName, [write]),
+    ok = file:write(OutFile, header()),
+    do_build(InFile, OutFile),
+    ok = file:write(OutFile, tail()),
+    ok.
+
+
+do_build(InFile, OutFile) ->
+    case file:read_line(InFile) of
+        {ok, []} ->
+            do_build(InFile, OutFile);
+        {ok, Line} ->
+            Data = delete_nr(delete_comments(Line)),
+            case ux_unidata_parser_unidata:parse(Data) of
+                skip ->
+                    do_build(InFile, OutFile);
+                {ok, Value} ->
+                    {_T, {Char, _CT}} = lists:keyfind(type, 1, Value),
+                    lists:foreach(
+                      fun({Action, Result}) ->
+                              WriteValue = io_lib:format("fetch(~p,~p) -> ~p;~n",
+                                                         [Action,
+                                                          Char, Result]),
+                              file:write(OutFile, WriteValue)
+                      end,
+                      Value),
+                    do_build(InFile, OutFile)
+            end;
+        eof -> ok
+    end.
+
+delete_nr(Str) -> [X || X <- Str, X =/= $\n, X =/= $\r].
+
+delete_comments(Line) ->
+    lists:reverse(do_delete_comments(Line, [])).
+
+do_delete_comments([], Acc) -> Acc;
+do_delete_comments([$# | _], Acc) -> Acc;
+do_delete_comments([H|T], Acc) -> 
+    do_delete_comments(T, [H|Acc]).
+
+
+main([InFileName, OutFileName]) ->
+ io:format("Generating unicode data erl file. ~p~n", [{InFileName, OutFileName}]),
+ io:format("Current path: ~p~n", [os:cmd("pwd")]),
+ ok = code:add_pathsz(["../ebin", "../deps/metamodule/ebin"]),
+ build(InFileName, OutFileName),
+ok;
+main(_) ->
+        io:format("Usage: generare_unidata <in-file-path> <out-file-path>~n~n",[]).

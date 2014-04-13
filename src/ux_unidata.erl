@@ -283,8 +283,13 @@ break_props('word') ->
     Name = 'word_break_property',
     func(Name, Name, 'skip_check').
     
-
-
+%% TODO - make is optional to use generated code versus files/ets
+func(unidata, skip_check, Value) -> 
+    fun(C) ->
+            ux_unidata_db:fetch(Value, C)
+    end;
+func(unidata, C, Value) -> 
+    ux_unidata_db:fetch(Value, C);
 func(Parser, Type, Value) -> 
     F = ux_unidata_filelist:get_source(Parser, Type),
     F(Value).
@@ -302,7 +307,7 @@ w3(C) ->
                 true -> upper;
                 false -> false end;
             
-        Type -> type end.
+        _Type -> type end.
 
 
 % Decomposition Type

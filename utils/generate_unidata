@@ -2,7 +2,7 @@
 %% -*- erlang -*-
 
 header() ->"
--module(unidata_db).
+-module(ux_unidata_db).
 
 -export([fetch/2]).
 
@@ -12,8 +12,8 @@ tail() -> "fetch(_,_) -> skip.
 ".
 
 
-build(InFileName, OutFileName) ->
-    %OutFileName = OutFilePath ++ "/unidata_db.erl",
+build(InFileName, OutFilePath) ->
+    OutFileName = OutFilePath ++ "/ux_unidata_db.erl",
     InFile = ux_unidata_parser:open_file(InFileName),
     {ok, OutFile} = file:open(OutFileName, [write]),
     ok = file:write(OutFile, header()),

@@ -16,6 +16,9 @@ eunit:
 clean:
 	@$(REBAR) clean
 
+generate:
+	cd utils;./generate_unidata ../priv/UNIDATA/UnicodeData.txt.gz ../src/
+
 build_plt:
 	@$(REBAR) build-plt
 

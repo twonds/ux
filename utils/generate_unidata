@@ -4,7 +4,65 @@
 header() ->"
 -module(ux_unidata_db).
 
--export([fetch/2]).
+-export([fetch/2, get_function/2]).
+
+get_function(w3, Value) -> 
+    DefValue = false,
+    default_fun(w3, Value, DefValue);
+get_function(comp_tag, Value) -> 
+    DefValue = false,
+    default_fun(comp_tag, Value, DefValue);
+get_function(ccc, Value) -> 
+    DefValue = 0,
+    default_fun(ccc, Value, DefValue);
+get_function(is_upper, Value) -> 
+    bool_fun(is_upper, Value);
+get_function(is_lower, Value) -> 
+    bool_fun(is_lower, Value);
+get_function(is_compat, Value) -> 
+    bool_fun(is_compat, Value);
+get_function(type, Value) -> 
+    DefValue = other,
+    default_fun(type, Value, DefValue);
+get_function(comment, Value) -> 
+    DefValue = <<>>,
+    default_fun(comment, Value, DefValue);
+get_function(comp, Value) -> 
+    DefValue = false,
+    default_fun(comp, Value, DefValue);
+get_function(decomp, Value) -> 
+    DefValue = [],
+    default_fun(decomp, Value, DefValue);
+get_function(to_upper, Value) -> 
+    DefValue = noop, % fun(C) -> C.
+    default_fun(to_upper, Value, DefValue);
+get_function(to_lower, Value) -> 
+    DefValue = noop, % fun(C) -> C.
+    default_fun(to_lower, Value, DefValue).
+
+bool_fun(Type, skip_check) ->
+    fun(C) ->
+            ?MODULE:fetch(Type, C)
+    end;
+bool_fun(Type, C) ->
+    fetch(Type, C).
+
+default_fun(Type, skip_check, DefaultValue) ->
+    fun(C) ->
+            case ?MODULE:fetch(Type, C) of
+                skip when DefaultValue =:= noop
+                          -> C;
+                skip -> DefaultValue;
+                {C, Val} -> Val
+            end
+    end;
+default_fun(Type, C, DefaultValue) ->
+   case fetch(Type, C) of
+       skip when DefaultValue =:= noop
+            -> C;
+       skip -> DefaultValue;
+       {C, Val} -> Val
+    end.
 
 ".
 

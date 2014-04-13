@@ -52,7 +52,7 @@
         nfc_qc/1, nfd_qc/1, nfkc_qc/1, nfkd_qc/1, 
         is_comp_excl/1, is_compat/1, decomp/1, comp/2, comp/1,
         ducet/1, char_block/1, char_script/1,
-
+         fetch/2,
         break_props/1, tertiary_weight/1]).
 
 -include("ux.hrl").
@@ -284,16 +284,38 @@ break_props('word') ->
     func(Name, Name, 'skip_check').
     
 %% TODO - make is optional to use generated code versus files/ets
-func(unidata, skip_check, Value) -> 
-    fun(C) ->
-            ux_unidata_db:fetch(Value, C)
-    end;
-func(unidata, C, Value) -> 
-    ux_unidata_db:fetch(Value, C);
+func(unidata, Type, Value) -> 
+    fetch(Type, Value);
 func(Parser, Type, Value) -> 
     F = ux_unidata_filelist:get_source(Parser, Type),
     F(Value).
 
+fetch(Type, skip_check) ->
+    fun(C) ->
+            ux_unidata:fetch(Type, C)
+    end;
+%% XXX - need to figure out how the type, to_lower, to_upper funs are created
+fetch(to_upper, C) ->
+    case ux_unidata_db:fetch(to_upper, C) of
+        skip -> C;
+        {_Lower, Upper} ->
+            Upper
+    end;
+fetch(to_lower, C) ->
+    case ux_unidata_db:fetch(to_lower, C) of
+        skip -> C;
+        {_Upper, Lower} ->
+            Lower
+    end;
+fetch(type, C) ->
+    case ux_unidata_db:fetch(type, C) of
+        {C, Type} ->
+            Type;
+        _ -> error
+    end;
+fetch(Type, C) ->
+    ux_unidata_db:fetch(Type, C).
+            
 
 % Case or Kana Subtype
 w3(C) when 16#FF67 >= C, C >= 16#FF6F -> small_narrow_katakana;

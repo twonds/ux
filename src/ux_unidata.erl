@@ -283,8 +283,8 @@ break_props('word') ->
     func(Name, Name, 'skip_check').
     
 func(unidata, Type, Value) ->
-    case code:is_loaded(ux_unidata_db) of
-        {file, _} ->
+    case ux_unidata_db:is_available() of
+        true ->
             %% Grab correct function
             ux_unidata_db:get_function(Type, Value);
         _ ->

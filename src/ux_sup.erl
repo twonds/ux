@@ -38,7 +38,8 @@ init([]) ->
     MetaWorker = {ux_unidata_meta, 
         {metamodule, start_link, [ux_unidata_meta]},
         permanent, 10000, worker, [metamodule]},
-
+    %% Beambag
+    BeamBag = ux_unidata_db:child_spec(),
     Strategy = {one_for_one, 10, 10},
-    {ok, {Strategy, [StoreSup, FileListWorker, DefaultUnidataWorker, MetaWorker]}}.
+    {ok, {Strategy, [StoreSup, BeamBag, FileListWorker, DefaultUnidataWorker, MetaWorker]}}.
 

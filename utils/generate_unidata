@@ -4,7 +4,7 @@
 header() ->"
 -module(ux_unidata_db).
 
--export([fetch/2, get_function/2]).
+-export([fetch/2, get_function/2, bool_fun/2, default_fun/3]).
 
 get_function(w3, Value) -> 
     DefValue = false,
@@ -42,19 +42,18 @@ get_function(to_lower, Value) ->
 
 bool_fun(Type, skip_check) ->
     fun(C) ->
-            ?MODULE:fetch(Type, C)
+            ?MODULE:bool_fun(Type, C)
     end;
 bool_fun(Type, C) ->
-    fetch(Type, C).
+    case fetch(Type, C) of
+        {C} ->
+            true;
+        _ -> false
+    end.
 
 default_fun(Type, skip_check, DefaultValue) ->
     fun(C) ->
-            case ?MODULE:fetch(Type, C) of
-                skip when DefaultValue =:= noop
-                          -> C;
-                skip -> DefaultValue;
-                {C, Val} -> Val
-            end
+            ?MODULE:default_fun(Type, C, DefaultValue)
     end;
 default_fun(Type, C, DefaultValue) ->
    case fetch(Type, C) of

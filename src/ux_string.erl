@@ -54,7 +54,7 @@
 
         to_lower/1, to_upper/1, to_string/1,
         delete_types/2, delete_types/3, 
-        filter_types/2, filter_types/3, 
+        filter_types/2, filter_types/3, filter_letters/1,
         explode_types/2, split_types/2,
         first_types/3, last_types/3,
 
@@ -99,7 +99,7 @@ nfd_qc(V) -> ?UNIDATA:nfd_qc(V).
 nfkc_qc(V) -> ?UNIDATA:nfkc_qc(V).
 nfkd_qc(V) -> ?UNIDATA:nfkd_qc(V).
 is_compat(V) -> ?UNIDATA:is_compat(V).
-comp(V1, V2) -> ?UNIDATA:comp(V1, V2).
+%comp(V1, V2) -> ?UNIDATA:comp(V1, V2).
 comp('skip_check') -> ?UNIDATA:comp('skip_check').
 decomp(V) -> ?UNIDATA:decomp(V).
 
@@ -188,6 +188,17 @@ delete_types(Types, Str, Limit) when Limit > 0 ->
 delete_types(Types, Str, Limit) when Limit < 0 ->
     lists:reverse(get_types(Types, Str, Limit, [], true, 
         fun not_in_array/2, 1,  0)).
+
+%% @doc Returns a new string which is made from the chars of Str 
+%%      which are a letter type.
+% @end
+-spec filter_letters(string()) -> string() | none().
+
+filter_letters(Str) -> 
+    lists:filter(fun(El) -> 
+            ux_char:is_letter(El)
+        end, Str).
+
 
 %% @doc Returns a new string which is made from the chars of Str 
 %%      which are a type from Types list.
@@ -711,7 +722,7 @@ get_recursive_decomposition(Decomp, Canonical, [Char|Tail], Result) ->
     case Decomp(Char) of
     []  -> get_recursive_decomposition(Decomp, Canonical, Tail,
             [Char|Result]);
-    Dec -> 
+    Dec ->
         case Canonical(Char) of % not is_compat = singleton
         true  -> 
             get_recursive_decomposition(Decomp, Canonical, Tail, 
@@ -741,7 +752,7 @@ normalize(Str) ->
 normalize1(_CCC, [], [ ], Result) -> 
     Result;
 
-normalize1(CCC, [], [_|_]=Buf, Result) -> 
+normalize1(_CCC, [], [_|_]=Buf, Result) -> 
     normalize2(lists:reverse(Buf), Result);
 
 normalize1(CCC, [Char|Tail], Buf, Result) ->
@@ -939,9 +950,9 @@ length(S) ->
     BS = ux_gb:split('extended', S),
     do_length(BS, 0).
 
-do_length(['x',H|T], Len) ->
+do_length(['x',_H|T], Len) ->
     do_length(T, Len);
-do_length([H|T], Len) ->
+do_length([_H|T], Len) ->
     do_length(T, Len + 1);
 do_length([], Len) ->
     Len.

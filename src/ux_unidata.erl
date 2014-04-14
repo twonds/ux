@@ -282,10 +282,15 @@ break_props('word') ->
     Name = 'word_break_property',
     func(Name, Name, 'skip_check').
     
-%% TODO - make is optional to use generated code versus files/ets
 func(unidata, Type, Value) ->
-    %% Grab correct function
-    ux_unidata_db:get_function(Type, Value);
+    case code:is_loaded(ux_unidata_db) of
+        {file, _} ->
+            %% Grab correct function
+            ux_unidata_db:get_function(Type, Value);
+        _ ->
+            F = ux_unidata_filelist:get_source(unidata, Type),
+            F(Value)
+    end;
 func(Parser, Type, Value) -> 
     F = ux_unidata_filelist:get_source(Parser, Type),
     F(Value).

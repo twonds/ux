@@ -4,7 +4,7 @@ DEST:=$(PREFIX)$(PROJECT)
 
 REBAR=./rebar
 
-all:
+all: generate
 	@$(REBAR) get-deps compile
 
 edoc:
@@ -16,8 +16,12 @@ eunit:
 clean:
 	@$(REBAR) clean
 
-generate:
+generate: ./ebin/ux_unidata_db.beam
+
+./ebin/ux_unidata_db.beam:
 	cd utils;./generate_unidata ../priv/UNIDATA/UnicodeData.txt.gz ../src/
+	erlc -o ./ebin/ ./src/ux_unidata_db.erl
+	rm ./src/ux_unidata_db.erl
 
 build_plt:
 	@$(REBAR) build-plt
